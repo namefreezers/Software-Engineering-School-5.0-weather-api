@@ -26,6 +26,10 @@ type Config struct {
 	// Weather API keys
 	WeatherAPIComKey     string
 	OpenWeatherMapOrgKey string
+
+	// Redis
+	RedisPassword string
+	RedisAddr     string
 }
 
 // Load reads and validates all required environment variables, applying defaults
@@ -94,6 +98,16 @@ func Load() (*Config, error) {
 	weatherApiComKey := os.Getenv("WEATHERAPI_COM_API_KEY")
 	openWeatherMapOrgKey := os.Getenv("OPENWEATHERMAP_ORG_API_KEY")
 
+	// Redis settings
+	redisPass := os.Getenv("REDIS_PASSWORD")
+	if redisPass == "" {
+		return nil, fmt.Errorf("REDIS_PASSWORD is required")
+	}
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = "redis:6379"
+	}
+
 	return &Config{
 		PostgresUser:     pgUser,
 		PostgresPassword: pgPass,
@@ -110,5 +124,8 @@ func Load() (*Config, error) {
 
 		WeatherAPIComKey:     weatherApiComKey,
 		OpenWeatherMapOrgKey: openWeatherMapOrgKey,
+
+		RedisPassword: redisPass,
+		RedisAddr:     redisAddr,
 	}, nil
 }

@@ -42,5 +42,47 @@ services:
       interval: 5s
       retries: 3
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    image: weather-api:latest
+    environment:
+      # Postgres
+      POSTGRES_USER:     ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB:       ${POSTGRES_DB}
+      POSTGRES_HOST:     db
+      POSTGRES_PORT:     ${POSTGRES_PORT:-5432}
+
+      # SMTP
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM}
+
+      # Weather API keys
+      WEATHERAPI_COM_API_KEY:    ${WEATHERAPI_COM_API_KEY}
+      OPENWEATHERMAP_ORG_API_KEY: ${OPENWEATHERMAP_ORG_API_KEY}
+
+      # Redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_ADDR:     ${REDIS_ADDR:-redis:6379}
+
+      # App
+      BASE_URL: ${BASE_URL}
+
+      # To forward Gin release mode
+      GIN_MODE: ${GIN_MODE}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
 volumes:
   db-data:

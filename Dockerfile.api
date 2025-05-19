@@ -1,0 +1,25 @@
+# Stage 1: Build the Go binary
+FROM golang:1.24-alpine AS builder
+WORKDIR /app
+
+# disable cgo for a fully static binary, install certs for HTTPS clients
+ENV CGO_ENABLED=0
+RUN apk add --no-cache ca-certificates
+
+# fetch deps
+COPY go.mod go.sum ./
+RUN go mod download
+
+# build the binary
+COPY . .
+RUN go build -o bin/api ./cmd/api
+
+# Stage 2: Run stage with minimal image
+FROM scratch
+# copy CA certs into place so the binary can make HTTPS calls
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+# copy the API binary
+COPY --from=builder /app/bin/api /api
+
+EXPOSE 8080
+ENTRYPOINT ["/api"]

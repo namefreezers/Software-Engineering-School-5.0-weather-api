@@ -30,6 +30,9 @@ type Config struct {
 	// Redis
 	RedisPassword string
 	RedisAddr     string
+
+	// API
+	BaseURL string
 }
 
 // Load reads and validates all required environment variables, applying defaults
@@ -108,6 +111,12 @@ func Load() (*Config, error) {
 		redisAddr = "redis:6379"
 	}
 
+	// Base URL for constructing confirmation/unsubscribe links
+	baseURL := os.Getenv("BASE_URL")
+	if baseURL == "" {
+		return nil, fmt.Errorf("BASE_URL is required")
+	}
+
 	return &Config{
 		PostgresUser:     pgUser,
 		PostgresPassword: pgPass,
@@ -127,5 +136,7 @@ func Load() (*Config, error) {
 
 		RedisPassword: redisPass,
 		RedisAddr:     redisAddr,
+
+		BaseURL: baseURL,
 	}, nil
 }

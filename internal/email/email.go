@@ -29,6 +29,7 @@ type EmailSender interface {
 type SMTPSender struct {
 	host      string
 	port      int
+	user      string
 	from      string
 	auth      smtp.Auth
 	tlsConfig *tls.Config
@@ -52,7 +53,8 @@ func NewSMTPSender(cfg *config.Config, logger *zap.Logger) (*SMTPSender, error) 
 	return &SMTPSender{
 		host:      cfg.SMTPHost,
 		port:      cfg.SMTPPort,
-		from:      cfg.SMTPUser,
+		user:      cfg.SMTPUser,
+		from:      cfg.SMTPFrom,
 		auth:      auth,
 		tlsConfig: tlsConfig,
 		logger:    logger,
@@ -152,8 +154,8 @@ func (s *SMTPSender) SendBatch(messages []EmailMessage) (err error) {
 // send sends a single EmailMessage using an existing SMTP client session.
 func (s *SMTPSender) send(client *smtp.Client, m EmailMessage) error {
 	// MAIL FROM
-	if err := client.Mail(s.from); err != nil {
-		s.logger.Error("MAIL FROM failed", zap.String("from", s.from), zap.Error(err))
+	if err := client.Mail(s.user); err != nil {
+		s.logger.Error("MAIL FROM failed", zap.String("from", s.user), zap.Error(err))
 		return fmt.Errorf("failed to set MAIL FROM: %w", err)
 	}
 	// RCPT TO

@@ -15,6 +15,13 @@ type Config struct {
 	PostgresHost     string
 	PostgresPort     int
 	DatabaseURL      string
+
+	// SMTP
+	SMTPHost string
+	SMTPPort int
+	SMTPUser string
+	SMTPPass string
+	SMTPFrom string
 }
 
 // Load reads and validates all required environment variables, applying defaults
@@ -52,6 +59,33 @@ func Load() (*Config, error) {
 		pgUser, pgPass, pgHost, pgPort, pgDB,
 	)
 
+	// SMTP settings
+	smtpHost := os.Getenv("SMTP_HOST")
+	if smtpHost == "" {
+		return nil, fmt.Errorf("SMTP_HOST is required")
+	}
+	smtpPortStr := os.Getenv("SMTP_PORT")
+	if smtpPortStr == "" {
+		return nil, fmt.Errorf("SMTP_PORT is required")
+	}
+	smtpPort, err := strconv.Atoi(smtpPortStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid SMTP_PORT %q: %w", smtpPortStr, err)
+	}
+	smtpUser := os.Getenv("SMTP_USER")
+	if smtpUser == "" {
+		return nil, fmt.Errorf("SMTP_USER is required")
+	}
+	smtpPass := os.Getenv("SMTP_PASS")
+	if smtpPass == "" {
+		return nil, fmt.Errorf("SMTP_PASS is required")
+	}
+	smtpFrom := os.Getenv("SMTP_FROM")
+	if smtpFrom == "" {
+		// default to the authenticated user
+		smtpFrom = smtpUser
+	}
+
 	return &Config{
 		PostgresUser:     pgUser,
 		PostgresPassword: pgPass,
@@ -59,5 +93,11 @@ func Load() (*Config, error) {
 		PostgresHost:     pgHost,
 		PostgresPort:     pgPort,
 		DatabaseURL:      databaseURL,
+
+		SMTPHost: smtpHost,
+		SMTPPort: smtpPort,
+		SMTPUser: smtpUser,
+		SMTPPass: smtpPass,
+		SMTPFrom: smtpFrom,
 	}, nil
 }

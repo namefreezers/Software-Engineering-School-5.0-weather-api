@@ -22,6 +22,10 @@ type Config struct {
 	SMTPUser string
 	SMTPPass string
 	SMTPFrom string
+
+	// Weather API keys
+	WeatherAPIComKey     string
+	OpenWeatherMapOrgKey string
 }
 
 // Load reads and validates all required environment variables, applying defaults
@@ -86,6 +90,10 @@ func Load() (*Config, error) {
 		smtpFrom = smtpUser
 	}
 
+	// Weather API keys. Might be present only one of them.
+	weatherApiComKey := os.Getenv("WEATHERAPI_COM_API_KEY")
+	openWeatherMapOrgKey := os.Getenv("OPENWEATHERMAP_ORG_API_KEY")
+
 	return &Config{
 		PostgresUser:     pgUser,
 		PostgresPassword: pgPass,
@@ -99,5 +107,8 @@ func Load() (*Config, error) {
 		SMTPUser: smtpUser,
 		SMTPPass: smtpPass,
 		SMTPFrom: smtpFrom,
+
+		WeatherAPIComKey:     weatherApiComKey,
+		OpenWeatherMapOrgKey: openWeatherMapOrgKey,
 	}, nil
 }

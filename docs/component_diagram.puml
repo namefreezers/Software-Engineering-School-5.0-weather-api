@@ -1,0 +1,43 @@
+@startuml
+!theme plain
+
+package "Current System" {
+  package "Migrate" as MIGRATE
+
+  package "API Service\n(Gin)" as API {
+    [repository pkg] as API_REPO
+    [weather pkg]    as API_WEATHER
+    [email pkg]      as API_EMAIL
+  }
+
+  package "Scheduler Service" as SCHED {
+    [repository pkg] as SCHED_REPO
+    [weather pkg]    as SCHED_WEATHER
+    [email pkg]      as SCHED_EMAIL
+  }
+
+  package "PostgreSQL DB" as PG
+
+  package "Redis Weather Cache" as REDIS
+
+  ' Migration interactions
+  MIGRATE --> PG : apply initial migrations
+
+  ' API service interactions
+  API_REPO --> PG               : read/write subscriptions
+  API_WEATHER --> REDIS         : get/set cache
+
+  ' Scheduler interactions
+  SCHED_REPO --> PG             : query scheduled subscriptions
+  SCHED_WEATHER --> REDIS       : get/set cache
+}
+
+node "SMTP Server"                    as SMTP
+node "WeatherAPI.com\n& OpenWeatherMap" as WEATHER_EXT
+
+' External interactions
+API_EMAIL --> SMTP                  : send confirmation email
+SCHED_EMAIL --> SMTP                : send weather update emails
+API_WEATHER --> WEATHER_EXT         : FetchCurrent(city)
+SCHED_WEATHER --> WEATHER_EXT       : FetchCurrent(city)
+@enduml

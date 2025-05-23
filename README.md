@@ -1,7 +1,7 @@
 # Weather API – Weather Notification Service
 
 ## Self-hosted HTTP-only deployment:
-http://79.184.28.62:8080/api/weather/?city=Kyiv
+http://79.184.4.175:8080/api/weather/?city=Kyiv
 
 Should be up most of the time
 
@@ -21,10 +21,11 @@ Implemeted as database queries:
 
   And then `Scheduler` sends current-minute-batches (hourly and daily) using common TCP/TSL connection per batch.
 - **Multiple Weather Data Sources for Redundancy:** The app integrates with external weather APIs (WeatherAPI.com and OpenWeatherMap) to have it backed up for the case, when one is out of order.
-- **Weather data caching:** To not overload third-party weather api endpoints, Redis cache is used to store weather cache per each city. `5 minutes` cache timeout is set as default value.
+- **Weather data caching with Redis:** To not overload third-party weather api endpoints, Redis cache is used to store weather cache per each city. `5 minutes` cache timeout is set as default value. Also, it improves response time for `weather/` endpoint for recurring requests significantly.
 - **PostgreSQL Database:** Subscription data is persistent between launches. All operations are atomic. `Api` service reads/writes subscription data atomically. `Scheduler` service only reads data in batches also atomically.
-- **Email Confirmation:** Subscription uses a double opt-in process – users receive a confirmation email with a link to activate their subscription. An unsubscription link is also provided in notification emails to allow users to opt out easily.
-- **Tech Stack:** Written in Go, using the Gin framework for the API. Data is stored in PostgreSQL, Redis is used for caching weather data, and emails are sent via SMTP. A background scheduler (in Go) handles periodic email dispatch. CI is set up with GitHub Actions for testing on each push.
+  - DB `UNIQUE` constraint backs the `/subscribe` api endpoint, checking uniqueness of new subscriptions which is needed for `409 Conflict` case
+  - DB indexes on `hourly` and `daily` subscriptions help to optimize regular DB-search requests in `Scheduler` service, which sends regular email updates.
+- **Tech Stack:** Written in Go, using the Gin framework for the API. Data is stored in PostgreSQL (initial migrations are made with `golang-migrate` one-off docker container), Redis is used for caching weather data, and emails are sent via SMTP. A background scheduler (in Go) handles periodic email dispatch. CI is set up with GitHub Actions for testing on each push.
 
 ## Current Architecture Components Diagram:
 
